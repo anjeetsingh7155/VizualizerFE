@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "Vizualizer",
+    "slug": "vizualizer",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true
     },
@@ -20,6 +20,26 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "resizeMode": "contain",
+          "backgroundColor": "#F7F5F2"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Vizualizer needs access to your photos so you can choose tile and room images.",
+          "cameraPermission": "Vizualizer needs camera access so you can photograph tiles and rooms."
+        }
+      ],
+      "expo-secure-store"
+    ]
   }
 }
