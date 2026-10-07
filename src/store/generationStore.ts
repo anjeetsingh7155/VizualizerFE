@@ -1,21 +1,22 @@
 import { create } from 'zustand';
+import type { SelectedImage } from '../types';
 
 interface GenerationDraftState {
-  textureUri: string | null;
-  roomUri: string | null;
+  textureImage: SelectedImage | null;
+  roomImage: SelectedImage | null;
   prompt: string;
-  setTextureUri: (uri: string | null) => void;
-  setRoomUri: (uri: string | null) => void;
+  setTextureImage: (image: SelectedImage | null) => void;
+  setRoomImage: (image: SelectedImage | null) => void;
   setPrompt: (prompt: string) => void;
   resetDraft: () => void;
 }
 
 export const useGenerationStore = create<GenerationDraftState>((set) => ({
-  textureUri: null,
-  roomUri: null,
+  textureImage: null,
+  roomImage: null,
   prompt: '',
-  setTextureUri: (textureUri) => set({ textureUri }),
-  setRoomUri: (roomUri) => set({ roomUri }),
+  setTextureImage: (textureImage) => set({ textureImage }),
+  setRoomImage: (roomImage) => set({ roomImage }),
   setPrompt: (prompt) => set({ prompt }),
-  resetDraft: () => set({ textureUri: null, roomUri: null, prompt: '' }),
+  resetDraft: () => set({ textureImage: null, roomImage: null, prompt: '' }),
 }));

@@ -21,7 +21,7 @@ const PLACEHOLDER =
 
 export function PromptScreen() {
   const { colors } = useTheme();
-  const { prompt, setPrompt, textureUri, roomUri } = useGenerationStore();
+  const { prompt, setPrompt, textureImage, roomImage } = useGenerationStore();
 
   const toggleSuggestion = (text: string) => {
     if (prompt.includes(text)) {
@@ -40,7 +40,7 @@ export function PromptScreen() {
     }
   };
 
-  const canCreate = Boolean(textureUri && roomUri && prompt.trim());
+  const canCreate = Boolean(textureImage && roomImage && prompt.trim());
 
   const handleCreate = () => {
     // Phase 2: the generation request is connected in Phase 6 (API) and Phase 7 (AI).

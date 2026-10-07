@@ -1,10 +1,12 @@
 import { useCallback } from 'react';
 import { Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import type { SelectedImage } from '../types';
+import { ImageValidationError, prepareImage } from '../utils/imageProcessing';
 
 type Source = 'camera' | 'library';
 
-async function launch(source: Source): Promise<string | null> {
+async function launch(source: Source): Promise<ImagePicker.ImagePickerAsset | null> {
   if (source === 'camera') {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
@@ -19,34 +21,47 @@ async function launch(source: Source): Promise<string | null> {
     }
   }
 
-  const options: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 0.9 };
+  const options: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 1 };
   const result =
     source === 'camera'
       ? await ImagePicker.launchCameraAsync(options)
       : await ImagePicker.launchImageLibraryAsync(options);
 
   if (result.canceled) return null;
-  return result.assets[0]?.uri ?? null;
+  return result.assets[0] ?? null;
 }
 
-/** Shows a "Take Photo / Choose from Library" choice and returns the picked image URI. */
-export function useImagePicker() {
-  return useCallback(
-    (onPicked: (uri: string) => void) => {
-      const handle = (source: Source) => {
-        launch(source)
-          .then((uri) => {
-            if (uri) onPicked(uri);
-          })
-          .catch(() => Alert.alert('Something went wrong', 'Unable to open the image picker.'));
-      };
+interface PickHandlers {
+  onPicked: (image: SelectedImage) => void;
+  /** Called with true while the photo is being checked and compressed, then false. */
+  onBusyChange?: (busy: boolean) => void;
+}
 
-      Alert.alert('Add Image', undefined, [
-        { text: 'Take Photo', onPress: () => handle('camera') },
-        { text: 'Choose from Library', onPress: () => handle('library') },
-        { text: 'Cancel', style: 'cancel' },
-      ]);
-    },
-    [],
-  );
+/** Shows "Take Photo / Choose from Library", then checks and compresses the chosen photo. */
+export function useImagePicker() {
+  return useCallback(({ onPicked, onBusyChange }: PickHandlers) => {
+    const handle = async (source: Source) => {
+      const asset = await launch(source);
+      if (!asset) return;
+
+      onBusyChange?.(true);
+      try {
+        onPicked(await prepareImage(asset));
+      } catch (error) {
+        if (error instanceof ImageValidationError) {
+          Alert.alert('Image not supported', error.message);
+        } else {
+          Alert.alert('Something went wrong', 'Unable to prepare this image. Please try another photo.');
+        }
+      } finally {
+        onBusyChange?.(false);
+      }
+    };
+
+    Alert.alert('Add Image', undefined, [
+      { text: 'Take Photo', onPress: () => void handle('camera') },
+      { text: 'Choose from Library', onPress: () => void handle('library') },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  }, []);
 }
