@@ -1,24 +1,29 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { AuthStackParamList } from '../../navigation/types';
+import type { RootStackParamList } from '../../navigation/types';
 import { Screen } from '../../components/ui/Screen';
 import { AppText } from '../../components/ui/AppText';
 import { BrandMark } from '../../components/ui/BrandMark';
 import { FadeIn } from '../../components/ui/FadeIn';
 import { FormMessage } from '../../components/ui/FormMessage';
+import { CloseButton } from '../../components/ui/CloseButton';
 import { TextField } from '../../components/inputs/TextField';
 import { Button } from '../../components/buttons/Button';
 import { useAuthStore } from '../../store/authStore';
+import { useSavedStore } from '../../store/savedStore';
 import { register } from '../../services/authService';
 import { ApiError } from '../../services/api';
 import { fieldErrors, registerSchema } from '../../utils/validation';
 import { spacing } from '../../theme';
 
-type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
 type Field = 'name' | 'email' | 'password' | 'confirmPassword';
 
-export function RegisterScreen({ navigation }: Props) {
+export function RegisterScreen({ navigation, route }: Props) {
+  const forSave = route.params?.reason === 'save';
+  // Back to where the person was (the sample they wanted to save is saved automatically).
+  const close = () => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate('Main', { screen: 'Gallery' }));
   const completeSignIn = useAuthStore((state) => state.completeSignIn);
   const [form, setForm] = useState<Record<Field, string>>({
     name: '',
@@ -47,6 +52,7 @@ export function RegisterScreen({ navigation }: Props) {
     try {
       const { token, user } = await register(parsed.data);
       await completeSignIn(token, user);
+      close();
     } catch (error) {
       if (error instanceof ApiError) {
         if (error.fields) setErrors(error.fields);
@@ -60,13 +66,21 @@ export function RegisterScreen({ navigation }: Props) {
 
   return (
     <Screen edges={['top', 'bottom']} contentStyle={styles.content}>
+      <CloseButton
+        onPress={() => {
+          // Closed without signing in: forget the sample they were trying to save.
+          useSavedStore.getState().setPendingSave(null);
+          close();
+        }}
+        disabled={submitting}
+      />
       <FadeIn>
         <BrandMark />
         <AppText variant="display" style={styles.title}>
           Create your account
         </AppText>
         <AppText variant="body" tone="muted">
-          Visualize tiles and marble in your own space.
+          {forSave ? 'Create a free account to save this sample.' : 'Save your favourite marble, granite and tile samples.'}
         </AppText>
       </FadeIn>
 
@@ -124,7 +138,7 @@ export function RegisterScreen({ navigation }: Props) {
           Already have an account?{' '}
         </AppText>
         <Pressable
-          onPress={() => navigation.navigate('Login')}
+          onPress={() => navigation.replace('Login', route.params)}
           disabled={submitting}
           accessibilityRole="link"
           hitSlop={8}
@@ -139,8 +153,8 @@ export function RegisterScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingTop: spacing.xxl },
-  title: { marginTop: spacing.xl, marginBottom: spacing.sm },
+  content: { paddingTop: spacing.md },
+  title: { marginTop: spacing.lg, marginBottom: spacing.sm },
   form: { marginTop: spacing.xl },
   submit: { marginTop: spacing.sm },
   footer: { flexDirection: 'row', justifyContent: 'center', marginTop: spacing.xl, flexWrap: 'wrap' },

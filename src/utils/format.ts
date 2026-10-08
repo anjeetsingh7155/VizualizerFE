@@ -19,3 +19,8 @@ export function getInitials(fullName: string): string {
 export function formatMonthYear(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 }
+
+/** e.g. "8 Oct 2026" */
+export function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}

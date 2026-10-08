@@ -1,24 +1,29 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { AuthStackParamList } from '../../navigation/types';
+import type { RootStackParamList } from '../../navigation/types';
 import { Screen } from '../../components/ui/Screen';
 import { AppText } from '../../components/ui/AppText';
 import { BrandMark } from '../../components/ui/BrandMark';
 import { FadeIn } from '../../components/ui/FadeIn';
 import { FormMessage } from '../../components/ui/FormMessage';
+import { CloseButton } from '../../components/ui/CloseButton';
 import { TextField } from '../../components/inputs/TextField';
 import { Button } from '../../components/buttons/Button';
 import { useAuthStore } from '../../store/authStore';
+import { useSavedStore } from '../../store/savedStore';
 import { login } from '../../services/authService';
 import { ApiError } from '../../services/api';
 import { fieldErrors, loginSchema } from '../../utils/validation';
 import { spacing } from '../../theme';
 
-type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 type Field = 'email' | 'password';
 
-export function LoginScreen({ navigation }: Props) {
+export function LoginScreen({ navigation, route }: Props) {
+  const forSave = route.params?.reason === 'save';
+  // Back to where the person was (the sample they wanted to save is saved automatically).
+  const close = () => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate('Main', { screen: 'Gallery' }));
   const completeSignIn = useAuthStore((state) => state.completeSignIn);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,6 +46,7 @@ export function LoginScreen({ navigation }: Props) {
     try {
       const { token, user } = await login(parsed.data);
       await completeSignIn(token, user);
+      close();
     } catch (error) {
       if (error instanceof ApiError) {
         if (error.fields) setErrors(error.fields);
@@ -54,13 +60,21 @@ export function LoginScreen({ navigation }: Props) {
 
   return (
     <Screen edges={['top', 'bottom']} contentStyle={styles.content}>
+      <CloseButton
+        onPress={() => {
+          // Closed without signing in: forget the sample they were trying to save.
+          useSavedStore.getState().setPendingSave(null);
+          close();
+        }}
+        disabled={submitting}
+      />
       <FadeIn>
         <BrandMark />
         <AppText variant="display" style={styles.title}>
           Welcome back
         </AppText>
         <AppText variant="body" tone="muted">
-          Sign in to continue designing your spaces.
+          {forSave ? 'Sign in to save this sample to your collection.' : 'Sign in to see your saved samples.'}
         </AppText>
       </FadeIn>
 
@@ -100,7 +114,7 @@ export function LoginScreen({ navigation }: Props) {
           New to Vizualizer?{' '}
         </AppText>
         <Pressable
-          onPress={() => navigation.navigate('Register')}
+          onPress={() => navigation.replace('Register', route.params)}
           disabled={submitting}
           accessibilityRole="link"
           hitSlop={8}
@@ -115,8 +129,8 @@ export function LoginScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  content: { justifyContent: 'center', paddingTop: spacing.xxl },
-  title: { marginTop: spacing.xl, marginBottom: spacing.sm },
+  content: { paddingTop: spacing.md },
+  title: { marginTop: spacing.lg, marginBottom: spacing.sm },
   form: { marginTop: spacing.xxl },
   submit: { marginTop: spacing.sm },
   footer: { flexDirection: 'row', justifyContent: 'center', marginTop: spacing.xl, flexWrap: 'wrap' },

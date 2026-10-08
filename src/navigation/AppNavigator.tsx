@@ -1,24 +1,23 @@
 import type { ComponentProps } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import type { AppTabParamList } from './types';
+import type { MainTabParamList } from './types';
 import { fonts, useTheme } from '../theme';
-import { HomeScreen } from '../screens/home/HomeScreen';
-import { CreateNavigator } from './CreateNavigator';
-import { HistoryScreen } from '../screens/history/HistoryScreen';
+import { GalleryScreen } from '../screens/gallery/GalleryScreen';
+import { SavedScreen } from '../screens/saved/SavedScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
-const Tab = createBottomTabNavigator<AppTabParamList>();
+const Tab = createBottomTabNavigator<MainTabParamList>();
 
-const icons: Record<keyof AppTabParamList, [IconName, IconName]> = {
-  Home: ['home', 'home-outline'],
-  Create: ['add-circle', 'add-circle-outline'],
-  History: ['images', 'images-outline'],
+const icons: Record<keyof MainTabParamList, [IconName, IconName]> = {
+  Gallery: ['images', 'images-outline'],
+  Saved: ['bookmark', 'bookmark-outline'],
   Profile: ['person', 'person-outline'],
 };
 
+/** The bottom tabs: Gallery (open to everyone), Saved and Profile. */
 export function AppNavigator() {
   const { colors } = useTheme();
   return (
@@ -35,9 +34,8 @@ export function AppNavigator() {
         },
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Create" component={CreateNavigator} />
-      <Tab.Screen name="History" component={HistoryScreen} />
+      <Tab.Screen name="Gallery" component={GalleryScreen} />
+      <Tab.Screen name="Saved" component={SavedScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );

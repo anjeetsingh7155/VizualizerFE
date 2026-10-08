@@ -5,11 +5,29 @@ export interface User {
   createdAt: string;
 }
 
-/** A photo chosen in the app, already resized and compressed, ready to upload. */
-export interface SelectedImage {
-  uri: string;
-  width: number;
-  height: number;
-  mimeType: 'image/jpeg';
-  fileName: string;
+export type SpaceType =
+  | 'living_room_floor'
+  | 'bedroom_floor'
+  | 'kitchen'
+  | 'bathroom'
+  | 'staircase'
+  | 'feature_wall';
+
+/** One AI picture of a sample in a room. */
+export interface GalleryImage {
+  id: string;
+  space: SpaceType;
+  imageUrl: string;
+}
+
+/** A sample shown in up to six rooms (created on the Vizualizer website). */
+export interface GalleryItem {
+  id: string;
+  textureName: string;
+  textureImageUrl: string;
+  style: string;
+  createdAt: string;
+  images: GalleryImage[];
+  /** True when the signed-in person has saved it. */
+  saved: boolean;
 }
